@@ -49,18 +49,18 @@ export default function Header() {
           type: "primary",
         },
       },
-      supplier: {
-        hrefBack: "/usuarios",
+      ["usuario"]: {
+        hrefBack: "/list-usuarios",
         title: "Informações do Usuário",
         description: `Edite e/ou delete o usuário clicando nos botões localizados na parte inferior.`,
       },
-      equipamento: {
-        hrefBack: "/equipamentos",
+      ["equipamento"]: {
+        hrefBack: "/list-equipamentos",
         title: "Informações do Equipamento",
         description: `Edite e/ou delete o equipamento clicando nos botões localizados na parte inferior.`,
       },
-      emprestimo: {
-        hrefBack: "/equipamentos",
+      ["emprestimo"]: {
+        hrefBack: "/list-emprestimos",
         title: "Informações do Empréstimo",
         description: `Marque como devolvido clicando no botão localizado na parte inferior.`,
       },
@@ -69,6 +69,17 @@ export default function Header() {
         action: {
           onAction: () => router.push("create-emprestimo"),
           content: "Realizar Empréstimo",
+          type: "primary",
+        },
+      },
+      ["usuario-emprestimos"]: {
+        title: "Empréstimos",
+      },
+      ["usuario-emprestimo"]: {
+        title: "Visualizar informações do empréstimo",
+        action: {
+          onAction: () => router.back(),
+          content: "Voltar",
           type: "primary",
         },
       },

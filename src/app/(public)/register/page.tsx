@@ -4,6 +4,8 @@ import Image from "next/image";
 import React, { useState } from "react";
 import FormInput from "@/components/UI/FormInput/FormInput";
 import { z } from "zod";
+import { useFormSubmit } from "@/hooks/useFormSubmit";
+import { register } from "@/services/auth/register";
 
 const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
 const phoneRegex = /^\(\d{2}\)\d{4,5}-\d{4}$/;
@@ -15,7 +17,7 @@ export const registerSchema = z.object({
   cpf: z
     .string()
     .regex(cpfRegex, { message: "CPF inválido, use o formato 999.999.999-99" }),
-  numeroDeContato: z.string().regex(phoneRegex, {
+  telefone: z.string().regex(phoneRegex, {
     message: "Número de contato inválido, use o formato (99)99999-9999",
   }),
 });
@@ -51,46 +53,28 @@ const fieldInformation = [
   {
     type: "text",
     label: "Número de contato",
-    name: "numeroDeContato",
+    name: "telefone",
     mask: "(00)00000-0000",
     placeholder: "(00)0000-0000",
   },
 ];
 
-const initalFormData = {
+const initialFormData = {
   nome: "",
   email: "",
   senha: "",
   cpf: "",
-  numeroDeContato: "",
+  telefone: "",
 };
 
 export default function Register() {
-  const [formData, setFormData] = useState(initalFormData);
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof RegisterSchema, string>>
-  >({});
-
-  const handleChange = (name: string, value: string) => {
-    setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = registerSchema.safeParse(formData);
-
-    if (!result.success) {
-      const fieldErrors: Partial<Record<keyof RegisterSchema, string>> = {};
-      result.error.issues.forEach((err) => {
-        const fieldName = err.path[0] as keyof RegisterSchema;
-        fieldErrors[fieldName] = err.message;
-      });
-      setErrors(fieldErrors);
-    } else {
-      setErrors({});
-      console.log("Formulário válido:", result.data);
-    }
-  };
+  const { formData, errors, isLoading, handleChange, handleSubmit } =
+    useFormSubmit<RegisterSchema>({
+      schema: registerSchema,
+      initialData: initialFormData,
+      onSubmit: register,
+      redirectUrl: "/login",
+    });
 
   return (
     <div className="flex bg-gray-100 items-center justify-center min-w-full min-h-screen">
@@ -129,12 +113,15 @@ export default function Register() {
               ))}
             </div>
             <div>
-              <button
-                type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
-                Cadastrar
-              </button>
+              <div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="cursor-pointer disabled:opacity-70 flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                >
+                  {isLoading ? "Cadastrando..." : "Cadastrar"}
+                </button>
+              </div>
             </div>
           </form>
           <p className="mt-6 text-center text-sm text-gray-500">

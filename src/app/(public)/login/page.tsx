@@ -5,6 +5,10 @@ import Image from "next/image";
 import { z } from "zod";
 import FormInput from "@/components/UI/FormInput/FormInput";
 import { useState } from "react";
+import { login } from "@/services/auth/login";
+import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
+import { useFormSubmit } from "@/hooks/useFormSubmit";
 
 export const loginSchema = z.object({
   email: z.email("Email inválido"),
@@ -28,37 +32,19 @@ const fieldInformation = [
   },
 ];
 
-const initalFormData = {
+const initialFormData = {
   email: "",
   senha: "",
 };
 
 export default function Login() {
-  const [formData, setFormData] = useState(initalFormData);
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof LoginSchema, string>>
-  >({});
-
-  const handleChange = (name: string, value: string) => {
-    setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = loginSchema.safeParse(formData);
-
-    if (!result.success) {
-      const fieldErrors: Partial<Record<keyof LoginSchema, string>> = {};
-      result.error.issues.forEach((err) => {
-        const fieldName = err.path[0] as keyof LoginSchema;
-        fieldErrors[fieldName] = err.message;
-      });
-      setErrors(fieldErrors);
-    } else {
-      setErrors({});
-      console.log("Formulário válido:", result.data);
-    }
-  };
+  const { formData, errors, isLoading, handleChange, handleSubmit } =
+    useFormSubmit<LoginSchema>({
+      schema: loginSchema,
+      initialData: initialFormData,
+      onSubmit: login,
+      redirectUrl: "/list-usuarios",
+    });
 
   return (
     <div className="flex bg-gray-100 items-center justify-center min-w-full min-h-screen">
@@ -98,9 +84,10 @@ export default function Login() {
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                disabled={isLoading}
+                className="cursor-pointer disabled:opacity-70 flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
-                Login
+                {isLoading ? "Entrando..." : "Entrar"}
               </button>
             </div>
           </form>

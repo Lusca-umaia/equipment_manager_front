@@ -1,76 +1,40 @@
 "use client";
 
+import { Equipamento } from "@/@types/equipamento";
 import Table from "./components/EquipamentosTable";
-
-const equipamentosMock: {
-  nome: string;
-  marca: string;
-  modelo: string;
-  categoria: string;
-}[] = [
-  {
-    nome: "Notebook Administrativo",
-    marca: "Dell",
-    modelo: "Latitude 5420",
-    categoria: "Informática",
-  },
-  {
-    nome: "Impressora Financeiro",
-    marca: "HP",
-    modelo: "LaserJet Pro M404dn",
-    categoria: "Impressora",
-  },
-  {
-    nome: "Servidor Principal",
-    marca: "Lenovo",
-    modelo: "ThinkSystem SR650",
-    categoria: "Servidor",
-  },
-  {
-    nome: "Projetor Sala de Reunião",
-    marca: "Epson",
-    modelo: "PowerLite X49",
-    categoria: "Audiovisual",
-  },
-  {
-    nome: "Switch Rack 01",
-    marca: "Cisco",
-    modelo: "Catalyst 2960-X",
-    categoria: "Rede",
-  },
-  {
-    nome: "Tablet RH",
-    marca: "Samsung",
-    modelo: "Galaxy Tab A8",
-    categoria: "Mobilidade",
-  },
-  {
-    nome: "Leitor de Código Estoque",
-    marca: "Zebra",
-    modelo: "DS2208",
-    categoria: "Periférico",
-  },
-  {
-    nome: "Monitor Financeiro",
-    marca: "LG",
-    modelo: "24MP400",
-    categoria: "Informática",
-  },
-  {
-    nome: "Nobreak Backup 01",
-    marca: "APC",
-    modelo: "Back-UPS 1200VA",
-    categoria: "Energia",
-  },
-  {
-    nome: "Scanner Arquivo Morto",
-    marca: "Brother",
-    modelo: "ADS-2200",
-    categoria: "Digitalização",
-  },
-];
+import { useEffect, useState } from "react";
+import { getEquipamentos } from "@/services/equipamentos/getEquipamentos";
+import Loading from "@/components/UI/Loading/Loading";
 
 export default function Equipamentos() {
+  const [usuarios, setUsuarios] = useState<Equipamento[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUsuarios = async () => {
+      const response = await getEquipamentos();
+
+      if (response.success) {
+        setUsuarios(response.data);
+      } else {
+        setError("Erro ao carregar usuários");
+      }
+
+      setLoading(false);
+    };
+
+    fetchUsuarios();
+  }, []);
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return <p className="text-center font-semibold">{error}! : (</p>;
+  }
+
   return (
     <div>
       <div
@@ -80,7 +44,7 @@ export default function Equipamentos() {
       >
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full py-2 align-middle">
-            <Table data={equipamentosMock} />
+            <Table data={usuarios} />
           </div>
         </div>
       </div>

@@ -1,40 +1,40 @@
 "use client";
 
+import { Emprestimo } from "@/@types/emprestimo";
 import Table from "./components/EmprestimosTable";
-
-const emprestimosMock: {
-  nomeUsuario: string;
-  emailUsuario: string;
-  equipamento: string;
-}[] = [
-  {
-    nomeUsuario: "Lucas Maia",
-    emailUsuario: "lucas.maia@example.com",
-    equipamento: "Notebook Dell Latitude 5420",
-  },
-  {
-    nomeUsuario: "Ana Beatriz",
-    emailUsuario: "ana.beatriz@example.com",
-    equipamento: "Projetor Epson PowerLite X49",
-  },
-  {
-    nomeUsuario: "Carlos Souza",
-    emailUsuario: "carlos.souza@example.com",
-    equipamento: "Tablet Samsung Galaxy Tab A8",
-  },
-  {
-    nomeUsuario: "Juliana Lima",
-    emailUsuario: "juliana.lima@example.com",
-    equipamento: "Impressora HP LaserJet Pro M404dn",
-  },
-  {
-    nomeUsuario: "Rafael Oliveira",
-    emailUsuario: "rafael.oliveira@example.com",
-    equipamento: "Leitor de Código Zebra DS2208",
-  },
-];
+import Loading from "@/components/UI/Loading/Loading";
+import { useEffect, useState } from "react";
+import { getEmprestimos } from "@/services/emprestimos/getEmprestimos";
 
 export default function Emprestimos() {
+  const [emprestimos, setEmprestimos] = useState<Emprestimo[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUsuarios = async () => {
+      const response = await getEmprestimos();
+
+      if (response.success) {
+        setEmprestimos(response.data);
+      } else {
+        setError("Erro ao carregar empréstimos");
+      }
+
+      setLoading(false);
+    };
+
+    fetchUsuarios();
+  }, []);
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return <p className="text-center font-semibold">{error}! : (</p>;
+  }
+
   return (
     <div>
       <div
@@ -44,7 +44,7 @@ export default function Emprestimos() {
       >
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full py-2 align-middle">
-            <Table data={emprestimosMock} />
+            <Table data={emprestimos} />
           </div>
         </div>
       </div>

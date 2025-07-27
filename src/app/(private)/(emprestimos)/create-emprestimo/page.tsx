@@ -1,46 +1,15 @@
 "use client";
-import { useState } from "react";
 import Button from "@/components/UI/Button/Button";
-import Select from "@/components/UI/Select/Select";
-import { Option } from "@/components/UI/Select/Select";
-
-import z from "zod";
-
-const optionSchema = z.object({
-  id: z.number(),
-  nome: z.string(),
-});
-
-const emprestimoSchema = z.object({
-  usuario: optionSchema.nullable().refine((val) => val !== null, {
-    message: "Usuário é obrigatório",
-  }),
-  equipamento: optionSchema.nullable().refine((val) => val !== null, {
-    message: "Equipamento é obrigatório",
-  }),
-});
-
-export type EmprestimoSchema = z.infer<typeof emprestimoSchema>;
-
-const inputInformation = [
-  {
-    label: "Usuário",
-    name: "usuario",
-    type: "text",
-    customClass: "col-span-full md:col-span-2",
-  },
-  {
-    label: "Equipamento",
-    name: "equipamento",
-    type: "text",
-    customClass: "col-span-full md:col-span-2",
-  },
-];
-
-interface FormData {
-  usuario: Option | null;
-  equipamento: Option | null;
-}
+import Select, { Option } from "@/components/UI/Select/Select";
+import { inputInformation, EmprestimoSchema, emprestimoSchema } from "../utils";
+import { useFormSubmit } from "@/hooks/useFormSubmit";
+import { realizarEmprestimo } from "@/services/emprestimos/realizarEmprestimo";
+import { useEffect, useState } from "react";
+import { getEquipamentos } from "@/services/equipamentos/getEquipamentos";
+import { getUsuarios } from "@/services/usuarios/getUsuarios";
+import { Equipamento } from "@/@types/equipamento";
+import { Usuario } from "@/@types/usuario";
+import Loading from "@/components/UI/Loading/Loading";
 
 const initialFormData = {
   usuario: null,
@@ -48,33 +17,56 @@ const initialFormData = {
 };
 
 export default function RegisterLoan() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [equipamentos, setEquipamentos] = useState<Option[]>([]);
+  const [usuarios, setUsuarios] = useState<Option[]>([]);
 
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof EmprestimoSchema, string>>
-  >({});
+  const { formData, errors, isLoading, handleChange, handleSubmit } =
+    useFormSubmit<EmprestimoSchema>({
+      schema: emprestimoSchema,
+      initialData: initialFormData as EmprestimoSchema,
+      onSubmit: realizarEmprestimo,
+      redirectUrl: "/list-emprestimos",
+    });
 
-  const handleChange = (name: string, value: Option) => {
-    setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
-  };
+  useEffect(() => {
+    const fetchEntidades = async () => {
+      const [responseEquipamento, responseUsario] = await Promise.all([
+        getEquipamentos(),
+        getUsuarios(),
+      ]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = emprestimoSchema.safeParse(formData);
+      if (responseEquipamento.success && responseUsario.success) {
+        setUsuarios(
+          responseUsario.data.map(({ nome, id }: Equipamento) => ({
+            nome,
+            id,
+          })),
+        );
+        setEquipamentos(
+          responseEquipamento.data.map(({ nome, id }: Usuario) => ({
+            nome,
+            id,
+          })),
+        );
+      } else {
+        setError("Erro ao carregar dados");
+      }
 
-    if (!result.success) {
-      const fieldErrors: Partial<Record<keyof EmprestimoSchema, string>> = {};
-      result.error.issues.forEach((err) => {
-        const fieldName = err.path[0] as keyof EmprestimoSchema;
-        fieldErrors[fieldName] = err.message;
-      });
-      setErrors(fieldErrors);
-    } else {
-      setErrors({});
-      console.log("Formulário válido:", result.data);
-    }
-  };
+      setLoading(false);
+    };
+
+    fetchEntidades();
+  }, []);
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return <p className="text-center font-semibold">{error}! : (</p>;
+  }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -86,10 +78,9 @@ export default function RegisterLoan() {
                 name={information.name}
                 value={formData[information.name as keyof typeof formData]}
                 handleChange={(value) => handleChange(information.name, value)}
-                options={[
-                  { id: 1, nome: "Lucas" },
-                  { id: 2, nome: "Cauã" },
-                ]}
+                options={
+                  information.name === "equipamento" ? equipamentos : usuarios
+                }
                 label={information.label}
                 error={errors[information.name as keyof typeof errors]}
               />

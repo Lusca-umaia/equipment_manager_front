@@ -1,5 +1,8 @@
+import React from "react";
 import Table from "@/components/UI/Table";
 import Link from "next/link";
+import { Usuario } from "@/@types/usuario";
+import EmptyState from "@/components/UI/EmptyState/EmptyState";
 
 const headItems = [
   {
@@ -24,31 +27,36 @@ const headItems = [
   },
 ];
 
-export default function UsuarioTable({ data }: { data: any }) {
+export default function UsuarioTable({ data }: { data: Usuario[] }) {
   return (
-    <Table.Root>
-      <Table.Head headItems={headItems} />
-      {data.map((supplier: any, index: number) => (
-        <Table.Body key={index}>
-          <Table.Row>
-            {headItems.map((item) => (
-              <Table.Item key={item.name}>
-                {supplier[item.field as keyof typeof supplier]}
-              </Table.Item>
-            ))}
-            <Table.Item>
-              <span className="flex items-center justify-end gap-2">
-                <Link
-                  className="underline text-gray-500"
-                  href={`/supplier/${supplier.id}`}
-                >
-                  Visualizar
-                </Link>
-              </span>
-            </Table.Item>
-          </Table.Row>
-        </Table.Body>
-      ))}
-    </Table.Root>
+    <React.Fragment>
+      {data.length > 0 && (
+        <Table.Root>
+          <Table.Head headItems={headItems} />
+          {data.map((usuario: Usuario) => (
+            <Table.Body key={usuario.id}>
+              <Table.Row>
+                {headItems.map((item) => (
+                  <Table.Item key={item.name}>
+                    {usuario[item.field as keyof typeof usuario]}
+                  </Table.Item>
+                ))}
+                <Table.Item>
+                  <span className="flex items-center justify-end gap-2">
+                    <Link
+                      className="underline text-gray-500"
+                      href={`/usuario/${usuario.id}`}
+                    >
+                      Visualizar
+                    </Link>
+                  </span>
+                </Table.Item>
+              </Table.Row>
+            </Table.Body>
+          ))}
+        </Table.Root>
+      )}
+      {data.length === 0 && <EmptyState>Sem usuários : (</EmptyState>}
+    </React.Fragment>
   );
 }
